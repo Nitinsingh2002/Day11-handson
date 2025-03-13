@@ -8,11 +8,12 @@ export const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [token, setToken] = useState();
-    const [cookies, setCookie, removeCookie] = useCookies(['cookie-name']);
+    const [cookies, setCookie, removeCookie] = useCookies(['token']);
 
     const navigate = useNavigate();
 
-    async function handleLogin() {
+    async function handleLogin(e) {
+        e.preventDefault();
         try {
             const result = await axios.post('https://localhost:7153/api/Authentication', { Email: email, Password: password })
             setToken(result.data.token);
@@ -33,9 +34,9 @@ export const Login = () => {
     return (
 
         <>
-        <Toaster/>
+        <Toaster position="top-right"/>
             <div className="p-3 mt-5 d-flex justify-content-center align-items-center  "  style={{height:"90vh"}}>
-            <div style={{ width: "25vw" }}  className="border px-3 py-2 shadow p-3 mb-5 bg-white rounded">
+            <form style={{ width: "25vw" }}  className="border px-3 py-2 shadow p-3 mb-5 bg-white rounded"  onSubmit={handleLogin}>
                 <h2 style={{display:'flex',alignContent:'center',justifyContent:'center'}}>Login</h2>
 
                 <div class="form-group" className="d-flex  flex-column justify-content-start">
@@ -67,11 +68,11 @@ export const Login = () => {
                     />
                 </div>
 
-                <button onClick={handleLogin}
+                <button type="submit"
                     className="btn btn-primary mt-2 w-100 mb-2">
                     Login
                 </button>
-            </div>
+            </form>
 
             </div>
         </>

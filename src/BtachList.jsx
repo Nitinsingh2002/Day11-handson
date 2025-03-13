@@ -4,11 +4,17 @@ import { useCookies } from "react-cookie";
 import { Link, useNavigate } from "react-router-dom";
 import { BounceLoader } from 'react-spinners'
 import { toast, Toaster } from "sonner";
-export const BatchList = () => {
+export const BatchList = ({ decodedDetails }) => {
     const [batches, setBatches] = useState([]);
     const [cookies] = useCookies(["token"]);
     const naviagte = useNavigate();
     const [loading, setLoading] = useState(true);
+
+    const [user, setUser] = useState();
+
+    const role = decodedDetails
+        ? decodedDetails["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]
+        : 'User';
 
 
 
@@ -26,6 +32,16 @@ export const BatchList = () => {
         } catch (error) {
             console.log("Error fetching batches:", error);
             setLoading(false)
+        }
+    }
+
+    const LoadSingleUser = async (userId) => {
+
+        try {
+            const result = await axios.get(`https://localhost:7153/api/Users/${userId}`)
+            setUser(result.data);
+        } catch (err) {
+            console.log(err)
         }
     }
 
@@ -51,34 +67,54 @@ export const BatchList = () => {
         if (!cookies.token) {
             naviagte("/login");
         }
-        LoadBatches();
-    }, [cookies.token,]);
+
+        const userId = decodedDetails?.sid;
+
+        const fetchData = async () => {
+            await LoadSingleUser(userId);
+            await LoadBatches();
+        };
+
+        fetchData();
+
+    }, [cookies.token,decodedDetails?.sid]);
 
     return (
         <div className="mt-5">
 
 
+            {user && (
+                <div className="alert alert-primary text-center">
+                    <h4>Welcome back, <strong>{user.firstName}!</strong> 👋</h4>
+                    <p>Hope you're having a great day!</p>
+                </div>
+            )}
 
             {loading ? (
                 <div style={{ height: '80vh', width: '95vw', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <BounceLoader color="#19ced3" />
                 </div>
             ) : batches.length === 0 ? (
-                <p>No batches found...</p>
+                <div>
+                </div>
             ) :
                 (
                     <>
-                    <Toaster position="top-right"/>
-                        <h2>Batch List</h2>
-                        <table class="table table-striped table-bordered table-hover w-80">
+                        <Toaster position="top-right" />
+
+                        <table class="table table-striped table-bordered table-hover w-60">
                             <thead className="thead-dark">
                                 <tr>
                                     <th scope="col">Batch ID</th>
                                     <th scope="col">Name</th>
                                     <th scope="col">Start Date</th>
                                     <th scope="col">Seats</th>
-                                    <th scope="col">Edit</th>
-                                    <th scope="col">Delete</th>
+                                    {role === "Admin" && (
+                                        <>
+                                            <th scope="col">Action</th>
+                                           
+                                        </>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody>
@@ -88,12 +124,18 @@ export const BatchList = () => {
                                         <td>{batch.name}</td>
                                         <td>{new Date(batch.startDate).toLocaleDateString()}</td>
                                         <td>{batch.seats}</td>
-                                        <td >
-                                            <button type="button" className="btn btn-primary">
-                                                <Link to={`/edit/${batch.batchId}`} style={{ textDecoration: 'none', color: 'white' }}>EDIT BATCH</Link>
-                                            </button>
-                                        </td>
-                                        <td><button type="button" className="btn btn-danger" onClick={()=>{deleteBatch(batch.batchId)}}>DELETE</button></td>
+                                        {
+                                            role === 'Admin' && (
+                                                <>
+                                                    <td >
+                                                        <button type="button" className="btn btn-primary me-5">
+                                                            <Link to={`/edit/${batch.batchId}`} style={{ textDecoration: 'none', color: 'white' }}>EDIT BATCH</Link>
+                                                        </button>
+                                                    
+                                                    <button type="button" className="btn btn-danger" onClick={() => { deleteBatch(batch.batchId) }}>DELETE</button></td>
+                                                </>
+                                            )
+                                        }
                                     </tr>
                                 ))}
                             </tbody>

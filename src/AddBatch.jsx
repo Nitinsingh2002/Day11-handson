@@ -14,8 +14,10 @@ export const AddBatch = () => {
 
     const navigate = useNavigate();
 
-    const AddBatch = async() =>{
+    const AddBatch = async(e) =>{
+        e.preventDefault()
         try{
+
             const result = await axios.post('https://localhost:7153/api/Batch',{
                 name,seats,startDate
             },{
@@ -41,7 +43,7 @@ export const AddBatch = () => {
         <>
         <Toaster/>
             <div className="p-3 mt-5 d-flex justify-content-center align-items-center vh-90">
-                <div style={{ width: "25vw" }}  className="border px-3 py-2 shadow p-3 mb-5 bg-white rounded">
+                <form style={{ width: "25vw" }}  className="border px-3 py-2 shadow p-3 mb-5 bg-white rounded" onSubmit={AddBatch}>
                     
                     <div className="form-group d-flex flex-column justify-content-start">
                         <label htmlFor="email" className="m-2 d-flex justify-content-start">Batch name</label>
@@ -64,10 +66,10 @@ export const AddBatch = () => {
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
                             required
+                            min={new Date().toISOString().split("T")[0]}  
                         />
                     </div>
 
-                    {/* Seats Field */}
                     <div className="form-group">
                         <label htmlFor="seats" className="m-2 d-flex justify-content-start">Seats</label>
                         <input
@@ -77,14 +79,15 @@ export const AddBatch = () => {
                             onChange={(e) => setSeats(e.target.value)}
                             placeholder="Enter seats"
                             required
+                            min={0}
                         />
                     </div>
 
                   
-                    <button className="btn btn-primary mt-3 w-100 mb-3" onClick={AddBatch}>
+                    <button className="btn btn-primary mt-3 w-100 mb-3" type="submit">
                         Add Batch
                     </button>
-                </div>
+                </form>
             </div>
 
         </>
